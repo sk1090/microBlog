@@ -1,0 +1,123 @@
+{{! Partial for a single post }}
+<div class="post">
+    
+    <div class="post-avatar">
+        <!-- the user's avatar -->
+         <div class="user-info">
+                <!-- conditional rendering based on variables -->
+                <img name="{{this.username}}" class="avatar-post-img" src="" 
+                            alt="User Avatar" 
+                            class="header-avatar">
+         </div>
+    </div>
+    <div class="post-content preserve-newlines">
+        <h3>{{this.title}}</h3>
+        <p>{{this.content}}</p>
+         <hr>
+        <div class="post-status-bar">
+            {{#ifCond this.username user.username}}
+            <button data-id="{{this.id}}" class="delete-button"><i class="fas fa-trash-alt"> </i></button>
+            {{else}}
+            <button  data-id="{{this.id}}" onclick="handleLikeClick()"  class="HeartButton">&#9829</button>
+            {{/ifCond}}
+            <p id="numLikes{{this.id}}">{{this.likes}} likes.</p>           
+            <p class="postmetadata">Posted by {{this.username}} on {{this.timestamp}}</p>
+        </div>        
+    </div>
+</div>
+<script>
+    window.addEventListener("load", init);
+    function init() {
+        let imgs = document.querySelectorAll(".avatar-post-img");
+        //renders user's avatars by doing a fetch call to get their urls and displaying them in their posts
+        for(let i = 0;i<imgs.length;i++)
+        {
+            let el2 = imgs[i];
+            let user8 = el2.name;
+            let user7 = el2.getAttribute("name");
+            const urlstr = "/avatar/"+user7;
+            fetch(urlstr, {
+                    method: "GET",
+            })
+            .then(response => response.text())
+            .then(text => {
+                el2.src = text;        
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        //adds event listeners for all the heart buttons
+        let trashes = document.querySelectorAll(".HeartButton");
+        for(let i = 0;i<trashes.length;i++)
+        {
+            trashes[i].addEventListener('click', handleLikeClick);
+        }
+
+        //adds event listeners for all the delete buttons
+        let trashes2 = document.querySelectorAll('.delete-button');
+        for(let i = 0;i<trashes2.length;i++)
+        {
+            trashes2[i].addEventListener('click', handleDeleteClick);
+        }
+    }
+
+
+
+    //increments the like count displayed, turns the heart red, does a fetch
+        //call to the server so the internal likes count is updated
+    function handleLikeClick(event) {
+        let buttonElement = event.target.closest('.HeartButton');
+        let t = buttonElement.getAttribute('data-id');
+        let s = "numLikes" + t;
+        let n2 = document.getElementById(s);
+        let paramstr = "id="+buttonElement.getAttribute('data-id')+"&addlike=true";
+         if(t!=undefined)
+         {
+            const urlstr = "/like/:"+t;
+            fetch(urlstr, {
+                method: "POST",
+                headers: new Headers({
+                'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
+                }),
+                body: paramstr
+            })
+            .then(response => response.text())
+            .then(text => {
+                if(text.includes("loggedin"))
+                {
+                        buttonElement.style.color = "red";
+                    n2.textContent = ""+(Number(n2.textContent[0])+1)+" likes.";
+                }
+                
+            })
+            .catch(error => console.error('Error:', error));
+         }
+    }
+    
+
+     //extracts the post id using js, does a fetch call to delete the post
+        //from the list of posts in the server and reload so it won't be rendered
+    function handleDeleteClick(event) {
+       let buttonElement = event.target.closest('.delete-button');
+       let paramstr = "id="+buttonElement.getAttribute('data-id');
+       let t = buttonElement.getAttribute('data-id');
+        if(t!=undefined)
+        {
+            const urlstr = "/delete/:"+t;
+            fetch(urlstr, {
+                method: "POST",
+                headers: new Headers({
+                    'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
+                    }),
+                    body: paramstr
+            })
+            .then(response => response.text())
+            .then(text => {
+                if (text.includes("Reload Page")) {
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }       
+    }    
+</script>

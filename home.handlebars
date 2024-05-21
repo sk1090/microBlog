@@ -1,0 +1,159 @@
+{{! Use the main layout }}
+{{!< main }}
+
+{{! New Post Submission Form }}
+<section class="content-container">
+    {{#if loggedIn}}
+        <!-- show the create post form when logged in -->
+        <section class="post-form">
+            <!-- make a header here -->
+            <form action="/posts" method="POST">
+                <!-- title input field name = "title" -->
+                <!-- text area input field name = "content" size="40" height="40" type="text"-->
+                <h2 id="newPost"> Create a new Post</h3>
+                <input size="38"type="text" class="PostTitle" name="PostTitle" placeholder="Title" required></input>
+                </br>
+                <textarea rows="10" cols="33" id="PostBody"class="PostBody"name="PostBody" placeholder="What's on your mind {{user.username}}" required></textarea>
+                <div class="form-actions">
+                    <button type="button" id="emoji-button2" class="emoji-button" onmousedown="ToggleEmojiPanel()">😀</button> 
+                    <button type="submit" class="post-button">Post</button>
+                </div>
+            </form>
+            
+            <div id="emoji-container" class="emoji-panel" style="display: none;">
+                <input oninput="searchEmojis()" id="emoji-search" size="40" type="text" class="EmojiSearchBar"></input>
+                <div id="emoji-grid">
+
+                </div>
+                <!-- input field for the emoji search, use oninput="searchEmojis() -->
+                <!-- a div, id = "emoji-grid" -->
+            </div>
+        </section>
+    {{/if}}
+
+    <section class="posts-list">
+        <!-- recent posts -->
+        
+        {{#if posts.length}}
+        
+        <ul>
+            <h2 id="newPost">Recent Posts</h2>
+            {{#each posts}}
+
+                <!-- you have to pass the user in to posts and this is the syntax -->
+                {{> post this user=../user}} 
+
+            {{/each}}
+        </ul>
+        {{else}}
+            <!-- no posts, oh no, what now? -->
+        {{/if}}
+    </section>
+</section>
+
+
+{{! JavaScript for Emoji Integration }}
+<script>
+    let accessToken2 = "";
+   window.addEventListener('load', init);
+
+   //fetches emoji api access key from server upon page load
+   function init(){
+        fetch("/getEmojiAccessKey", {
+            method: "GET",
+        })
+        .then(response => response.text())
+        .then(text => {
+            accessToken2 = text;             
+        })
+        .catch(error => console.error('Error:', error));
+    }
+   
+    let allEmojis = [];
+    let rop = 0;
+
+    //filters emoji by search term from emoji search bar and displays them
+    function searchEmojis() {
+            if(rop==0)
+            {
+                rop++;
+            }
+        
+        let searchTerm = document.getElementById('emoji-search').value.toLowerCase();
+        let filteredEmojis = [];
+        for(let i = 0;i<allEmojis.length;i++)
+        {
+            if(allEmojis[i].slug.includes(searchTerm)) 
+            {
+                filteredEmojis.push(allEmojis[i]);
+
+            }
+        }
+        let r = ""+filteredEmojis.length;
+        displayEmojis(filteredEmojis, 200);
+    }
+
+    //inserts emoji into textarea
+    function insertEmoji(emoji) {    
+        document.getElementById('PostBody').value+=emoji;
+        document.getElementById('PostBody').focus();
+    }
+
+    //displays emojis in emoji-grid div
+    function displayEmojis(emojis,limit=200) {
+        const container = document.getElementById('emoji-grid');
+        container.innerHTML = '';  // Clear previous results
+        if (Array.isArray(emojis) && emojis.length > 0) {
+            emojis.slice(0, limit).forEach(emoji => {
+                const emojiElement = document.createElement('span');
+                emojiElement.textContent = emoji.character;
+                emojiElement.title = emoji.slug;  // Showing the emoji name on hover
+                emojiElement.style.cursor = 'pointer';
+                emojiElement.onclick = () => insertEmoji(emoji.character);
+                container.appendChild(emojiElement);
+            });
+        } else {
+            container.textContent = 'No emojis found. Try a different search!';
+        }
+    }
+    //toggle emoji panel function: fetches and displays emojis if emoji button is clicked
+        //is passed directly into event listener as anonymous function here for simplicity
+    document.getElementById('emoji-button2').addEventListener('click', function(event) {
+        const container = document.getElementById('emoji-container');
+        container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        if(container.style.display === 'block' && allEmojis.length == 0){
+            let str7 = "https://emoji-api.com/emojis?access_key="+accessToken2;
+            fetch(str7)//need to get emoju key
+            .then(statusCheck)
+            .then(resp => resp.json())
+            .then(processData)
+            .catch(handleError);
+            displayEmojis(emojis, 200);
+            // go "Fetch" you some emojis and show them off with displayEmojies
+        }
+        displayEmojis(emojis, 200);
+    });
+        
+    function handleError(err)
+    {
+        alert("error");
+    }
+
+    //displays 200 of the fetched emojis
+    function processData(responseData)
+    {
+        allEmojis = responseData;
+        let s = ""+responseData.length;
+        let t = responseData[0].slug;
+        displayEmojis(responseData, 200);
+    }
+    async function statusCheck(res){
+        if(!res.ok)
+        {
+            throw new Error(await res.text());
+        }
+        return res;
+    }
+
+</script>
+

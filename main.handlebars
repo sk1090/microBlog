@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    
+    <!-- font awesome for the trashcan icon --> 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">    
+    
+    <title>{{{appName}}}</title>
+
+   <!-- <link rel="stylesheet" href="/css/style.css">-->
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+        <div class="logo">
+            <img src="../../images/logo.png" alt="CactusSpikes Logo" class="header-logo"> 
+                    <!--Image source citation: Ilya Sedykh, cactus-in-a-pot.png, 2022,Vector Portal, 
+                        Created by Ilya Sedykh, [CC BY 4.0 DEED (https://creativecommons.org/licenses/by/4.0/], 
+                            https://vectorportal.com/vector/cactus-in-a-pot/35581 .-->
+            <li> <h3 id="logoName"> {{{appName}}}</h3></li>
+         </div>
+   
+                <!-- conditional rendering based on variables - Is the user logged in?-->
+                {{#if loggedIn}}
+                    
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/profile">Profile</a></li>
+                    <div class="logoutUser">
+                    <li><a href="/logout">Logout <span>{{user.username}}</span> </a></li>
+        
+                    <div class="user-info-navbar">
+
+                        <!-- conditional rendering based on variables -->
+                        <img src="{{#if user.avatar_url}}
+                                        {{user.avatar_url}}
+                                    {{else}}
+                                        /avatar/{{user.username}}
+                                    {{/if}}" 
+                                    alt="User Avatar" 
+                                    class="header-avatar">
+                    </div>
+                    </div>
+                {{else}}
+                
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/login">Login/Register</a></li>              
+                {{/if}}
+            </ul>
+        </nav>
+    </header>
+
+    {{{body}}}
+
+    <footer>
+        <p>© {{{copyrightYear}}} {{{appName}}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

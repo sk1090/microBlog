@@ -1,0 +1,353 @@
+/*p{
+  color:green;
+}
+*/
+#emoji-search{
+  width:100%;
+}
+.post-button{
+  width:50%;
+}
+.restofbar{
+  flex-basis:80%;
+}
+.logoutUser{
+  
+  display:flex;
+  align-items: center;
+  vertical-align: center;
+}
+
+.logo{
+  flex-basis:20%;
+  display:flex;
+  align-items: center;
+  vertical-align: center;
+  /*margin-right:0px;
+ padding-right:0px;*/
+}
+.logo img{
+  height: 50px;
+  width: auto;
+  margin-left:5px;
+}
+
+.user-info-navbar img{
+  height: 50px;
+  width: auto;
+  margin-right:5px;
+}
+
+.logo li{
+  display: inline-block;
+  
+}
+
+#logoName{
+  color: white;
+}
+html,
+body {
+  height: 100vh;
+}
+
+footer{
+  
+ 
+ 
+  width:100%;
+text-align: center;
+padding-top:  10px;
+padding-bottom:  10px;
+background-color: green;
+color: white;
+
+}
+
+
+nav {
+
+       background-color: green;
+    
+  /*padding: 1rem*/
+
+    
+}
+    
+        
+    nav ul {
+    
+      list-style-type: none;
+    
+       padding: 0;
+    
+       margin: 0;
+    
+      display: flex;
+    
+       justify-content: space-between;
+       align-items: center;
+       
+    
+}
+
+.logoname{
+ 
+  margin-left: 0px;
+  
+}
+
+nav li{
+ 
+}
+    
+  
+    
+nav a {
+    
+      color: white;
+
+    
+     text-decoration: none;
+    
+  font-size: 80 rem;
+}
+
+.post{
+  background-color: lightgray;
+  width:100%;
+  margin: auto;
+  display:flex;
+  align-items: center;
+  vertical-align: center;
+  margin-bottom: 20px;
+}
+
+.post-avatar{
+  flex-basis: 20%;
+  vertical-align: none;
+  
+  vertical-align: none;
+  align-items: none;
+  margin: none;
+  padding-top:0;
+  margin-top: 0;
+  padding-right:2%;
+  
+}
+
+.PostTitle{
+  width:98%;
+}
+.PostBody{
+  width:99%;
+   /*line-height: 180px;*/
+  text-align: none;
+  padding:15px 0;
+  overflow-wrap: break-word;
+
+}
+/*
+.postmetadata{
+  display:inline;
+}
+*/
+
+.post-status-bar{
+  display: flex; justify-content: space-between;
+  vertical-align: none;
+ 
+ 
+  
+  
+ /* text-align: center;*/
+}
+.post-status-bar p{
+  padding-top: 0;
+}
+.numLikes{
+  margin-left:5%;
+  margin-right:0%;
+  padding: 0 0 0 0;
+  
+}
+.user-info img, .logoutUser li{
+  display:inline-block;
+}
+.user-info
+{
+  vertical-align: none;
+  align-items: none;
+  display: block;
+  padding-top:0px;
+}
+
+.post-content{
+  width: 100%;
+
+}
+
+
+
+@media screen and (min-width: 600px){
+    html{
+        height:100%;
+    }
+  footer{
+    position:absolute;
+    
+  }
+  .content-container{
+    display: flex;
+  }
+  
+  .post-form
+  {
+    flex-basis:70%;
+  }
+  
+  .posts-list{
+    width: 100%;
+   /* flex-basis:90%;*/
+  }
+
+}
+
+@media screen and (max-width: 600px){
+  footer{
+    position: relative;
+  
+    margin-top:auto;
+  }
+  .post-form, .posts-list{
+    width:99%;
+    margin: 0 auto;
+  }
+  .post-form{
+    margin-left:8.7%;
+    margin-right:3%;
+  }
+}
+
+.login-area{
+  
+  margin-left: 15%;
+  background-color: gray;
+  height:350px;
+  margin-top:5%;
+  background-color: ghostwhite;
+  width:200px;
+  padding-left: 50 px;
+  margin: 0 auto;
+
+}
+
+.loginButton,.registerButton{
+  width:100%;
+  background-color:lightgreen;
+}
+
+.register-area{
+  
+  margin-right: 15%;
+  background-color: gray;
+  height:350px;
+  margin-top:5%;
+  background-color: ghostwhite;
+  width:200px;
+ 
+  margin: 0 auto;
+
+}
+
+@media screen and (min-width: 600px){
+  .login-area,.register-area{
+    flex-basis:20%;
+  }
+  .or-element{
+    flex-basis:33%;
+  }
+  .login-register{
+    height:80%;
+    display:flex;
+    vertical-align: center;
+    align-items:center;
+  }
+}
+
+/*
+.register-area{
+  flex-basis:33%;
+}
+*/
+
+.or-element{
+  
+  text-align: center;
+}
+
+.profile-avatar img{
+  margin-top:20px;
+  height:200px;
+  width: auto;
+ 
+}
+
+@media screen and (min-width: 650px){
+  .profile-avatar img{
+    margin-left:5%;
+  }
+  .profile-container{
+    display:Flex;
+    align-items: center;
+  }
+  .profile-avatar{
+    flex-basis:40%;
+    margin-left:25%;
+  }
+  .profile-info{
+    flex-basis:60%;
+  }
+}
+
+@media screen and (max-width: 650px) and (min-width: 100px){
+  .profile-info
+  {
+    margin: 0 auto;
+  } 
+  .profile-avatar{
+    display:flex;
+    align-items: center;
+    vertical-align: center;
+  }
+  .profile-avatar img{
+    margin-left:30%;
+  }
+
+}
+
+
+.profile-avatar{
+    margin-top:20px;
+    margin: 0 auto;
+   
+    
+}
+
+
+
+.profile-info{
+  margin-top: 20px;
+  background-color: lightgrey;
+  height:150px;
+  /*width:auto;*/
+  width:90%;
+}
+
+#likesword{
+  padding-left:0;
+}
+
+.HeartButton{
+  font-size:25px;
+}
