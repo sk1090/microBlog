@@ -340,6 +340,7 @@ app.get('/auth/google', (req, res) => {
 
 // Handle OAuth 2.0 server response
 app.get('/auth/google/callback', async (req, res) => {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     const { code } = req.query;
     const { tokens } = await client.getToken(code);
     //console.log(profile);
@@ -370,7 +371,7 @@ var hashedid = crypto.createHash('sha256').update(user_id).digest('hex');
 //console.log(hash.update(input));
 //input.pipe(hash).setEncoding('hex').pipe(stdout);
 //console.log(input);
-const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+
 let user = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[hashedid]);
 if(user==undefined)
 {
@@ -458,21 +459,7 @@ app.listen(PORT, () => {
 // Support Functions and Variables
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// Example data for posts and users
-let posts = [
-    { id: 1, title: 'Sample Post', content: 'This is a sample post.', username: 'SampleUser', timestamp: '2024-01-01 10:00', likes: 0 },
-    { id: 2, title: 'Another Post', content: 'This is another sample post.', username: 'AnotherUser', timestamp: '2024-01-02 12:00', likes: 0 },
-];
 
-
-let postslikedby = [
-    {id:1, users: []},
-    {id:2, users: []},
-];
-let users = [
-    { id: 1, username: 'SampleUser', avatar_url: undefined, memberSince: '2024-01-01 08:00' },
-    { id: 2, username: 'AnotherUser', avatar_url: undefined, memberSince: '2024-01-02 09:00' },
-];
 
 
 // Function to find a user by username
@@ -480,13 +467,6 @@ async function findUserByUsername(username) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     let user9 = await db.get('SELECT * FROM users WHERE username = ?',[username]);
     return user9;
-    for (let i = 0; i < users.length; i++) {
-       if(users[i].username === username)
-        {
-            return users[i];
-        }
-      }
-      return undefined;
     //Returns user object if found, otherwise return undefined
 }
 
@@ -495,15 +475,6 @@ async function findUserById(userId) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
      let user9 = db.get('SELECT * FROM users WHERE id = ?',[userId]);
      return user9;
-
-    //Returns user object if found, otherwise return undefined
-    for (let i = 0; i < users.length; i++) {
-        if(users[i].id == userId)
-         {
-             return users[i];
-         }
-       }
-       return undefined;
 }
 async function addUser2(hashedid) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
@@ -552,7 +523,7 @@ async function addUser(username) {
     let mins = String(today.getMinutes()).padStart(2, '0');
     let finaldate = yyyy+'-'+mm+'-'+dd+' '+hours+':'+mins;
     currentUser.memberSince = finaldate;
-    users.push(currentUser);
+    //users.push(currentUser);
     
     console.log("hi6");
     let plholder = generateAvatar(username[0],100,100);
