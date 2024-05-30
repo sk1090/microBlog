@@ -266,7 +266,7 @@ app.get('/getEmojiAccessKey', (req, res) => {
 });
 
 app.get('/getCurrentSortType', (req, res) => {
-    console.log("hi");
+    console.log("hi1333330");
     if(sortbydate==1)
     {
         res.send("dates");
@@ -554,7 +554,7 @@ async function registerUser(req, res) {
     console.log("hi7")
     let uname = req.body.registeredusername;
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-    console.log("hi");
+    console.log("hi133333");
     id3 = req.session.userId;
     id4 = res.locals.userId;
    // let user7 = await db.get('SELECT * FROM users WHERE username = ?',[uname]);
@@ -595,7 +595,7 @@ async function loginUser(req, res) {
             {
                 let avatar_url2 = generateAvatar(username[0],100,100); //generates avatar for user if one doesn't exist
                 const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-                console.log("hi");
+                console.log("hi13334");
                 await db.run('UPDATE users SET avatar_url = ? WHERE username = ?',[avatar_url2,uname]);
             }
         res.locals.loggedIn = true;
@@ -657,7 +657,7 @@ async function updatePostLikes(req, res) {
     if(numlikes!=undefined)
     {
         console.log(numlikes);
-        console.log("hi");
+        console.log("hi13333339");
         let numlikes2 = numlikes.likes; //is this a number idk
         console.log(numlikes2);
         let numlikes3 = numlikes2+1; //will this work\
