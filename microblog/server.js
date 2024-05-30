@@ -10,6 +10,7 @@ const { google } = require('googleapis');
 const { OAuth2Client } = require('google-auth-library');
 const path = require('path');
 const crypto = require('crypto');
+require('dotenv').config();
 
 
 async function getDBConnection(){
@@ -28,18 +29,23 @@ async function getDBConnection(){
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 const app = express();
-const CLIENT_ID = "20385861370-4q9slsa79fsmlnnd300eq61fj34hg4kt.apps.googleusercontent.com";
-//process.env.CLIENT_ID;
-const CLIENT_SECRET = "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";
-// process.env.CLIENT_SECRET;
+//20385861370-4q9slsa79fsmlnnd300eq61fj34hg4kt.apps.googleusercontent.com
+const accessToken = process.env.EMOJI_API_KEY;
+let ry = ""+accessToken;
+//console.log(accessToken)
+//console.log(""+5);
+const CLIENT_ID = ""+process.env.CLIENT_ID;
+//console.log("HEYITS");
+//console.log(CLIENT_ID);
+//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
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = 'http://localhost:3000/auth/google/callback';
 const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 const PORT = 3000;
 let currentpostid = 3;
 
-require('dotenv').config();
-const accessToken = process.env.EMOJI_API_KEY;
-let ry = ""+accessToken;
+
+
 let sortbydate=1;
 
 
@@ -156,19 +162,36 @@ app.get('/', async function(req, res){
 
     const user = await getCurrentUser(req)|| await findUserById(res.locals.userId) || {};
     //getCurrentUser(req) || {};
-    console.log("DIE");
-    console.log(user.username);
+    //console.log("DIE");
+   // console.log(user.username);
     //let posts =  await getPosts();
+
+    //generates an avatar for all users w/o an avatar
+    console.log("HELP!");
+    console.log(user);
+    if(user=={}||getCurrentUser(req)==undefined||user.length==0||user.id==undefined)
+    {
+        console.log("HELP2!");
+        const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+        let emptyavatarusers = await db.all('SELECT * FROM users WHERE avatar_url = ?',['']);
+        for(let i = 0;i<emptyavatarusers.length;i++)
+        {
+            let id999 = emptyavatarusers[i].id;
+            let plholder5 = generateAvatar((emptyavatarusers[i].username)[0],100,100);
+            await db.run('UPDATE users SET avatar_url = ? WHERE id = ?',[plholder5,id999]);
+        }
+    }
+
     let posts =  await getPosts();
     if(sortbydate==1)
         {
-            console.log("ch2");
+            //console.log("ch2");
             posts =  await getPosts();
             //console.log(posts);
             res.render('home', { posts, user });
             
         }else{
-            console.log("ch3");
+            //console.log("ch3");
              posts =  await getPosts2();
              //console.log(posts);
 
@@ -207,8 +230,8 @@ app.post('/postsort', async function (req, res){
     }
     
     await res.redirect('/');
-    console.log("DIENOW");
-    console.log(req.body.sorttype);
+    //console.log("DIENOW");
+    //console.log(req.body.sorttype);
     req.body.sorttype = "nlikes";
 });
 
@@ -221,8 +244,8 @@ app.post('/profilepostsort', async function (req, res){
     }
     
     await res.redirect('/profile');
-    console.log("DIENOW");
-    console.log(req.body.sorttype);
+   // console.log("DIENOW");
+    //console.log(req.body.sorttype);
     req.body.sorttype = "nlikes"; //?
 });
 
@@ -266,7 +289,7 @@ app.get('/getEmojiAccessKey', (req, res) => {
 });
 
 app.get('/getCurrentSortType', (req, res) => {
-    console.log("hi1333330");
+    //console.log("hi1333330");
     if(sortbydate==1)
     {
         res.send("dates");
@@ -277,7 +300,7 @@ app.get('/getCurrentSortType', (req, res) => {
 });
 
 app.get('/changeSort', async function(req, res){
-    console.log("MAKINGTHATCHANGE")
+    //console.log("MAKINGTHATCHANGE")
     if(sortbydate==0)
     {
         sortbydate=1;
@@ -331,25 +354,25 @@ app.get('/logoutCallback', (req, res) => {
 });
 
 app.get('/auth/google', (req, res) => {
-    console.log("inauth1");
+    //console.log("inauth1");
     const url = client.generateAuthUrl({
         access_type: 'offline',
         scope: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
     });
-    console.log("inauth2);
+   // console.log("inauth2");
     res.redirect(url);
-    console.log("doneauth3");
+    //console.log("doneauth3");
 });
 
 // Handle OAuth 2.0 server response
 app.get('/auth/google/callback', async function(req, res){
-    console.log("incb1");
+   // console.log("incb1");
     const { code } = req.query;
-    console.log("incb2");
+   // console.log("incb2");
     const { tokens } = await client.getToken(code);
-    console.log("incb3");
+   // console.log("incb3");
     //console.log(profile);
-    console.log(tokens);
+    //console.log(tokens);
     client.setCredentials(tokens);
 
     const oauth2 = google.oauth2({
@@ -376,9 +399,9 @@ var hashedid = crypto.createHash('sha256').update(user_id).digest('hex');
 //console.log(hash.update(input));
 //input.pipe(hash).setEncoding('hex').pipe(stdout);
 //console.log(input);
-    console.log("HEY");
+//console.log("HEY");
 const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-    console.log("HEY2");
+//console.log("HEY2");
 let user = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[hashedid]);
 if(user==undefined)
 {
@@ -386,7 +409,7 @@ if(user==undefined)
     user = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[""+hashedid]);
     if(user==undefined)
         {
-            console.log("CTB");
+            //console.log("CTB");
         }
     res.locals.loggedIn = true;
     req.session.loggedIn = true;
@@ -408,13 +431,13 @@ if(user==undefined)
     let posts =  await getPosts();
     if(sortbydate==1)
         {
-            console.log("ch2");
+           // console.log("ch2");
             posts =  await getPosts();
             //console.log(posts);
             res.render('home', { posts, user });
             
         }else{
-            console.log("ch3");
+            //console.log("ch3");
              posts =  await getPosts2();
              //console.log(posts);
 
@@ -438,9 +461,9 @@ if(user==undefined)
 app.post('/delete/:id', isAuthenticated, async function(req, res){
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     app.use(isAuthenticated);
-    console.log("pi7");
+    //console.log("pi7");
     let id7 = req.body.id;
-    console.log("pi8");
+    //console.log("pi8");
     await db.run('DELETE FROM posts WHERE id = ?',[id7]);
 /*
     for(let i = 0;i<posts.length;i++)
@@ -485,7 +508,7 @@ async function findUserById(userId) {
 }
 async function addUser2(hashedid) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-    console.log("hi5");
+    //console.log("hi5");
     let hashedid2 = hashedid;
    /* let currentUser = {};
     currentUser.id = users.length+1;
@@ -502,20 +525,20 @@ async function addUser2(hashedid) {
    // currentUser.memberSince = finaldate;
    // users.push(currentUser);
     
-    console.log("hi6");
+   // console.log("hi6");
    // let plholder = generateAvatar(username[0],100,100);
     
-    console.log("hi7");
+    //console.log("hi7");
     let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince") VALUES (?,?,?,?)';
-    console.log("hi8");
+   // console.log("hi8");
    // console.log(username2);
     let p10 = await db.run(qry,[hashedid2,hashedid2,hashedid2,finaldate]);
-    console.log("hi9");
+   // console.log("hi9");
     //Creates a new user object and add to users array
 }
 // Function to add a new user
 async function addUser(username) {
-    console.log("hi5");
+   // console.log("hi5");
     let username2 = username;
     let currentUser = {};
     currentUser.id = users.length+1;
@@ -532,21 +555,21 @@ async function addUser(username) {
     currentUser.memberSince = finaldate;
     //users.push(currentUser);
     
-    console.log("hi6");
+    //console.log("hi6");
     let plholder = generateAvatar(username[0],100,100);
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-    console.log("hi7");
+    //console.log("hi7");
     let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince") VALUES (?,?,?,?)';
-    console.log("hi8");
-    console.log(username2);
+   // console.log("hi8");
+    //console.log(username2);
     let p10 = await db.run(qry,[username2,username2,plholder,finaldate]);
-    console.log("hi9");
+    //console.log("hi9");
     //Creates a new user object and add to users array
 }
 
 // Middleware to check if user is authenticated
 function isAuthenticated(req, res, next) { //, next
-    console.log(req.session.id);
+    //console.log(req.session.id);
     if (req.session.id) {
         next();
     } else {
@@ -556,29 +579,29 @@ function isAuthenticated(req, res, next) { //, next
 
 // Function to register a user
 async function registerUser(req, res) {
-    console.log("hi7")
+    //console.log("hi7")
     let uname = req.body.registeredusername;
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-    console.log("hi133333");
+    //console.log("hi133333");
     id3 = req.session.userId;
     id4 = res.locals.userId;
    // let user7 = await db.get('SELECT * FROM users WHERE username = ?',[uname]);
     let user7 = await db.get('SELECT * FROM users WHERE username = ?',[uname]);   
     if(user7!=undefined)
     {
-        console.log("hi2");
+        //console.log("hi2");
         res.render('registerUsername', { regError: "Please enter an unregistered username" });
         return;
     }else{
-        console.log("hi3");
+        //console.log("hi3");
        // await addUser(uname);
        let plholder = generateAvatar(uname[0],100,100);
        await db.run('UPDATE users SET username = ? WHERE id = ?',[uname,id4]);
        await db.run('UPDATE users SET avatar_url = ? WHERE id = ?',[plholder,id4]);
-       console.log("done666");
+       //console.log("done666");
        let user7 = await db.get('SELECT * FROM users WHERE id = ?',[id4]);
        
-        console.log("hi5");
+        //console.log("hi5");
         res.redirect('/');
         return;
     }
@@ -600,7 +623,7 @@ async function loginUser(req, res) {
             {
                 let avatar_url2 = generateAvatar(username[0],100,100); //generates avatar for user if one doesn't exist
                 const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-                console.log("hi13334");
+                //console.log("hi13334");
                 await db.run('UPDATE users SET avatar_url = ? WHERE username = ?',[avatar_url2,uname]);
             }
         res.locals.loggedIn = true;
@@ -661,15 +684,15 @@ async function updatePostLikes(req, res) {
     let numlikes = await db.get('SELECT * FROM posts WHERE id = ?',[r]);
     if(numlikes!=undefined)
     {
-        console.log(numlikes);
-        console.log("hi13333339");
+        //console.log(numlikes);
+        //console.log("hi13333339");
         let numlikes2 = numlikes.likes; //is this a number idk
-        console.log(numlikes2);
+        //console.log(numlikes2);
         let numlikes3 = numlikes2+1; //will this work\
-        console.log(numlikes3);
+        //console.log(numlikes3);
         let user9 = await db.run('UPDATE posts SET likes = ? WHERE id = ?',[numlikes3,r]);
     }else{
-        console.log("die");
+        //console.log("die");
     }
 
     /*
@@ -747,11 +770,11 @@ async function addPost(title, content, user) {
   //  posts.push(currentPost);
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     let qry = 'INSERT INTO posts ("title", "content","username","timestamp","likes") VALUES (?,?,?,?,?)';
-    console.log("bf");
+    //console.log("bf");
     let o11=0;
-    console.log(user7);
+    //console.log(user7);
     let o10 = await db.run(qry,[title,content,user7,finaldate,o11]);
-    console.log("af");
+    //console.log("af");
     //Creates a new post object and add to posts array
 }
 
