@@ -2,6 +2,20 @@
   color:green;
 }
 */
+#loginbutton a {
+  display: inline-block;
+  background-color: #4285F4;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#logout-area{
+  background-color:transparent;
+}
+
 #emoji-search{
   width:100%;
 }
