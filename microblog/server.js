@@ -331,18 +331,23 @@ app.get('/logoutCallback', (req, res) => {
 });
 
 app.get('/auth/google', (req, res) => {
+    console.log("inauth1");
     const url = client.generateAuthUrl({
         access_type: 'offline',
         scope: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
     });
+    console.log("inauth2);
     res.redirect(url);
+    console.log("doneauth3");
 });
 
 // Handle OAuth 2.0 server response
 app.get('/auth/google/callback', async function(req, res){
-    
+    console.log("incb1");
     const { code } = req.query;
+    console.log("incb2");
     const { tokens } = await client.getToken(code);
+    console.log("incb3");
     //console.log(profile);
     console.log(tokens);
     client.setCredentials(tokens);
