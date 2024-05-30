@@ -339,8 +339,8 @@ app.get('/auth/google', (req, res) => {
 });
 
 // Handle OAuth 2.0 server response
-app.get('/auth/google/callback', async (req, res) => {
-    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+app.get('/auth/google/callback', async function(req, res) => {
+    
     const { code } = req.query;
     const { tokens } = await client.getToken(code);
     //console.log(profile);
@@ -371,7 +371,9 @@ var hashedid = crypto.createHash('sha256').update(user_id).digest('hex');
 //console.log(hash.update(input));
 //input.pipe(hash).setEncoding('hex').pipe(stdout);
 //console.log(input);
-
+    console.log("HEY");
+const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    console.log("HEY2");
 let user = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[hashedid]);
 if(user==undefined)
 {
