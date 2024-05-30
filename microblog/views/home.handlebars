@@ -90,7 +90,7 @@ function changeradio()
         })
         .then(response => response.text())
         .then(text => {
-            alert(text);  
+            //alert(text);  
             document.getElementById(text).checked=true;  
             currentsort = text;  
         })
