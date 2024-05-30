@@ -2,20 +2,6 @@
   color:green;
 }
 */
-#loginbutton a {
-  display: inline-block;
-  background-color: #4285F4;
-  color: green;
-  padding: 10px 20px;
-  border-radius: 5px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-#logout-area{
-  background-color:transparent;
-}
-
 #emoji-search{
   width:100%;
 }
@@ -55,6 +41,9 @@
 .logo li{
   display: inline-block;
   
+}
+#logout-area{
+  background-color:transparent;
 }
 
 #logoName{
@@ -119,8 +108,7 @@ nav li{
     
 nav a {
     
-    /*  color: white;*/
-  color: green;
+      color: white;
 
     
      text-decoration: none;
@@ -128,8 +116,18 @@ nav a {
   font-size: 80 rem;
 }
 
+#loginbutton a {
+  display: inline-block;
+  background-color: #4285F4;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
 .post{
-  background-color: lightgray;
+  background-color: lightgreenS;
   width:100%;
   margin: auto;
   display:flex;
