@@ -119,7 +119,8 @@ nav li{
     
 nav a {
     
-      color: white;
+    /*  color: white;*/
+  color: green;
 
     
      text-decoration: none;
