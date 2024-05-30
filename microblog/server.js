@@ -199,13 +199,6 @@ app.get('/error', (req, res) => {
 
 // Additional routes that you must implement
 app.post('/postsort', async function (req, res){
-    console.log("HIP");
-    /*
-    let a = req.body.dates;
-    console.log("HIP");
-    console.log(a);
-    console.log("MAKINGTHATCHANGE")
-    */
     if(sortbydate==0)
     {
         sortbydate=1;
@@ -217,8 +210,20 @@ app.post('/postsort', async function (req, res){
     console.log("DIENOW");
     console.log(req.body.sorttype);
     req.body.sorttype = "nlikes";
-    
+});
 
+app.post('/profilepostsort', async function (req, res){
+    if(sortbydate==0)
+    {
+        sortbydate=1;
+    }else{
+        sortbydate=0;
+    }
+    
+    await res.redirect('/profile');
+    console.log("DIENOW");
+    console.log(req.body.sorttype);
+    req.body.sorttype = "nlikes"; //?
 });
 
 //Adds a new post and redirect to home
@@ -649,6 +654,14 @@ async function renderProfile(req, res) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
    const user = await findUserById(res.locals.userId);
    let posts2 = await db.all('SELECT * FROM posts WHERE username = ?',[user.username]);
+   posts2 = posts2.slice().reverse();
+   if(sortbydate==0)
+    {
+   posts2 = await db.all('SELECT * FROM posts WHERE username = ? ORDER BY likes DESC',[user.username]);
+   res.render('profile', { user, posts2});
+    }else{
+        res.render('profile', { user, posts2});
+    }
    /*let posts2 = [];
     for(let i = 0;i<posts.length;i++)
         {
@@ -658,7 +671,7 @@ async function renderProfile(req, res) {
                 }
         }
     */
-       res.render('profile', { user, posts2});
+       
     //Fetches user posts and render the profile page
 }
 
