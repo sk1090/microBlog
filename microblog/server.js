@@ -167,11 +167,11 @@ app.get('/', async function(req, res){
     //let posts =  await getPosts();
 
     //generates an avatar for all users w/o an avatar
-    console.log("HELP!");
-    console.log(user);
+   // console.log("HELP!");
+  //  console.log(user);
     if(user=={}||getCurrentUser(req)==undefined||user.length==0||user.id==undefined)
     {
-        console.log("HELP2!");
+       // console.log("HELP2!");
         const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
         let emptyavatarusers = await db.all('SELECT * FROM users WHERE avatar_url = ?',['']);
         for(let i = 0;i<emptyavatarusers.length;i++)
