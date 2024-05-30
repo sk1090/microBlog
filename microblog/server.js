@@ -339,7 +339,7 @@ app.get('/auth/google', (req, res) => {
 });
 
 // Handle OAuth 2.0 server response
-app.get('/auth/google/callback', async function(req, res) => {
+app.get('/auth/google/callback', async function(req, res){
     
     const { code } = req.query;
     const { tokens } = await client.getToken(code);
