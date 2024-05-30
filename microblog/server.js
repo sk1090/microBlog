@@ -2,19 +2,59 @@ const express = require('express');
 const expressHandlebars = require('express-handlebars');
 const session = require('express-session');
 const canvas = require('canvas');
+const sqlite3 = require('sqlite3');
+const sqlite = require('sqlite');
+const passport = require('passport')
+const dbFileName = 'your_database_file.db';
+const { google } = require('googleapis');
+const { OAuth2Client } = require('google-auth-library');
+const path = require('path');
+const crypto = require('crypto');
 
+
+async function getDBConnection(){
+    const db = await sqlite.open({
+        filename: 'your_database_file.db', // replace this with your db file name
+        driver: sqlite3.Database
+    });
+
+    return db;
+}
+
+//const db = getDBConnection();
+//const db = await getDbConnection();
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configuration and Setup
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 const app = express();
+const CLIENT_ID = "20385861370-4q9slsa79fsmlnnd300eq61fj34hg4kt.apps.googleusercontent.com";
+//process.env.CLIENT_ID;
+const CLIENT_SECRET = "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";
+// process.env.CLIENT_SECRET;
+const REDIRECT_URI = 'http://localhost:3000/auth/google/callback';
+const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 const PORT = 3000;
 let currentpostid = 3;
 
 require('dotenv').config();
 const accessToken = process.env.EMOJI_API_KEY;
 let ry = ""+accessToken;
+let sortbydate=1;
 
+
+/*
+try {
+    // error could happen here
+    let rows = await db.all('SELECT name FROM pokedex');
+    // process the result rows somehow
+  } catch (error) {
+    // PRO debugging tip
+    console.log(error); // ALWAYS delete this before submitting
+    res.status(500).send('Error on the server. Please try again later.');
+  }
+  
+*/
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,11 +116,13 @@ app.use(
         cookie: { secure: false },          // True if using https. Set to false for development without https
     })
 );
-
+app.use(passport.initialize());
+app.use(passport.session());
 // Replace any of these variables below with constants for your application. These variables
 // should be used in your template files. 
 // 
 app.use((req, res, next) => {
+    
     res.locals.appName = 'CactiSpikes';
     res.locals.copyrightYear = 2024;
     res.locals.postNeoType = 'Post';
@@ -101,13 +143,40 @@ app.use(express.json());                            // Parse JSON bodies (as sen
 // We pass the posts and user variables into the home
 // template
 //
-app.get('/', (req, res) => {
-    const posts = getPosts();
+app.get('/', async function(req, res){
+    //let db = getDbConnection();
+    /*
+    if(sortbydate==1)
+    {
+        let posts =  await getPosts();
+    }else{
+        let posts =  await getPosts2();
+    }
+    */
 
-    const user = getCurrentUser(req)||findUserById(res.locals.userId) || {};
+    const user = await getCurrentUser(req)|| await findUserById(res.locals.userId) || {};
     //getCurrentUser(req) || {};
+    console.log("DIE");
+    console.log(user.username);
+    //let posts =  await getPosts();
+    let posts =  await getPosts();
+    if(sortbydate==1)
+        {
+            console.log("ch2");
+            posts =  await getPosts();
+            //console.log(posts);
+            res.render('home', { posts, user });
+            
+        }else{
+            console.log("ch3");
+             posts =  await getPosts2();
+             //console.log(posts);
 
-    res.render('home', { posts, user });
+             res.render('home', { posts, user });
+             
+        }
+        
+    //res.render('home', { posts, user });
 });
 
 // Register GET route is used for error response from registration
@@ -129,33 +198,61 @@ app.get('/error', (req, res) => {
 
 
 // Additional routes that you must implement
+app.post('/postsort', async function (req, res){
+    console.log("HIP");
+    /*
+    let a = req.body.dates;
+    console.log("HIP");
+    console.log(a);
+    console.log("MAKINGTHATCHANGE")
+    */
+    if(sortbydate==0)
+    {
+        sortbydate=1;
+    }else{
+        sortbydate=0;
+    }
+    
+    await res.redirect('/');
+    console.log("DIENOW");
+    console.log(req.body.sorttype);
+    req.body.sorttype = "nlikes";
+    
 
+});
 
 //Adds a new post and redirect to home
-app.post('/posts', (req, res) => {
+app.post('/posts', async function(req, res){
     // TODO: 
-   let user2 = findUserById(res.locals.userId);
+   let user2 = await findUserById(res.locals.userId);
     let postTitle =  req.body.PostTitle;
     let postContent = req.body.PostBody;
-    addPost(postTitle, postContent, user2);
+    await addPost(postTitle, postContent, user2);
+    /*if(sortbydate==0)
+        {
+            sortbydate=1;
+        }else{
+            sortbydate=0;
+        }
+        */
     res.redirect('/');
 });
 
 
 
 //updates post likes in posts array
-app.post('/like/:id', (req, res) => {
+app.post('/like/:id', async function(req, res){
     if(res.locals.loggedIn || req.session.loggedIn)
     {
-        updatePostLikes(req,res);
+        await updatePostLikes(req,res);
         res.send("loggedin");
     }
 });
 
 //Renders profile page
-app.get('/profile', isAuthenticated, (req, res) => {
+app.get('/profile', isAuthenticated, async function(req, res){
     app.use(isAuthenticated);
-    renderProfile(req, res);
+    await renderProfile(req, res);
 });
 
 //sends emoji access key to user if they send a fetch request for it
@@ -163,30 +260,176 @@ app.get('/getEmojiAccessKey', (req, res) => {
     res.send(accessToken);
 });
 
+app.get('/getCurrentSortType', (req, res) => {
+    console.log("hi");
+    if(sortbydate==1)
+    {
+        res.send("dates");
+    }else{
+        res.send("nlikes");
+    }
+    
+});
+
+app.get('/changeSort', async function(req, res){
+    console.log("MAKINGTHATCHANGE")
+    if(sortbydate==0)
+    {
+        sortbydate=1;
+    }else{
+        sortbydate=0;
+    }
+    
+    await res.redirect('/');
+});
+
 //Serves the avatar image for the user
-app.get('/avatar/:username', (req, res) => {
-    handleAvatar(req,res);
+app.get('/avatar/:username', async function(req, res){
+    await handleAvatar(req,res);
 });
 
 //Registers a new user
-app.post('/register', (req, res) => {
-    registerUser(req, res);
+app.post('/register', async function(req, res){
+    await registerUser(req, res);
+    
+});
+
+app.post('/registerUsername', async function(req, res){
+    await registerUser(req, res);
     
 });
 
 //Logs in a user
-app.post('/login', (req, res) => {
-    loginUser(req,res);
+app.post('/login', async function(req, res){
+    await loginUser(req,res);
 });
 
 //Logout the user
 app.get('/logout', (req, res) => {
     logoutUser(req, res);
+    res.redirect('/googleLogout')
+   // res.render('googleLogout', { posts, user });
+
 });
 
+app.get('/googleLogout', (req, res) => {
+  //  logoutUser(req, res);
+    //res.redirect('/googleLogout')
+    res.sendFile(path.join(__dirname, 'iframelogout.html'));
+    let user = getCurrentUser(req);
+   // res.render('googleLogout', {});
+
+});
+
+app.get('/logoutCallback', (req, res) => {
+    res.render('googleLogout', {});
+});
+
+app.get('/auth/google', (req, res) => {
+    const url = client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
+    });
+    res.redirect(url);
+});
+
+// Handle OAuth 2.0 server response
+app.get('/auth/google/callback', async (req, res) => {
+    const { code } = req.query;
+    const { tokens } = await client.getToken(code);
+    //console.log(profile);
+    console.log(tokens);
+    client.setCredentials(tokens);
+
+    const oauth2 = google.oauth2({
+        auth: client,
+        version: 'v2',
+    });
+
+    const userinfo = await oauth2.userinfo.get();
+    /*
+    res.send(`
+        <h1>Hello, ${userinfo.data.id}</h1> 
+        <p>Email: ${userinfo.data.email}</p>
+        <img src="${userinfo.data.picture}" alt="Profile Picture">
+        <br>
+        <a href="/logout">Logout from App</a>
+        <br>
+    `);
+    */
+   
+    let user_id = userinfo.data.id; //const
+var hashedid = crypto.createHash('sha256').update(user_id).digest('hex');
+//console.log(hash);
+//hash.update(input);
+//console.log(hash.update(input));
+//input.pipe(hash).setEncoding('hex').pipe(stdout);
+//console.log(input);
+const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+let user = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[hashedid]);
+if(user==undefined)
+{
+   await addUser2(""+hashedid);
+    user = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[""+hashedid]);
+    if(user==undefined)
+        {
+            console.log("CTB");
+        }
+    res.locals.loggedIn = true;
+    req.session.loggedIn = true;
+    res.locals.userId = user.id;
+    req.session.userId = user.id;
+    loggedIn = true;
+    res.render('registerUsername', { regError: req.query.error });
+}else{
+    /*
+    res.locals.appName = 'CactiSpikes';
+    res.locals.copyrightYear = 2024;
+    res.locals.postNeoType = 'Post';
+    */
+    res.locals.loggedIn = true;
+    req.session.loggedIn = true;
+    res.locals.userId = user.id;
+    req.session.userId = user.id;
+    loggedIn = true;
+    let posts =  await getPosts();
+    if(sortbydate==1)
+        {
+            console.log("ch2");
+            posts =  await getPosts();
+            //console.log(posts);
+            res.render('home', { posts, user });
+            
+        }else{
+            console.log("ch3");
+             posts =  await getPosts2();
+             //console.log(posts);
+
+             res.render('home', { posts, user });
+             
+        }
+}
+
+});
+
+
+
+
+
+
+
+
+
+
 //Deletes a post if the current user is the owner
-app.post('/delete/:id', isAuthenticated, (req, res) => {
+app.post('/delete/:id', isAuthenticated, async function(req, res){
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     app.use(isAuthenticated);
+    console.log("pi7");
+    let id7 = req.body.id;
+    console.log("pi8");
+    await db.run('DELETE FROM posts WHERE id = ?',[id7]);
+/*
     for(let i = 0;i<posts.length;i++)
         {
             if(posts[i].id==req.body.id)
@@ -194,6 +437,7 @@ app.post('/delete/:id', isAuthenticated, (req, res) => {
                     posts.splice(i,1);
                 }
         }
+        */
         res.send("Reload Page");
 });
 
@@ -214,6 +458,8 @@ let posts = [
     { id: 1, title: 'Sample Post', content: 'This is a sample post.', username: 'SampleUser', timestamp: '2024-01-01 10:00', likes: 0 },
     { id: 2, title: 'Another Post', content: 'This is another sample post.', username: 'AnotherUser', timestamp: '2024-01-02 12:00', likes: 0 },
 ];
+
+
 let postslikedby = [
     {id:1, users: []},
     {id:2, users: []},
@@ -225,7 +471,10 @@ let users = [
 
 
 // Function to find a user by username
-function findUserByUsername(username) {
+async function findUserByUsername(username) {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    let user9 = await db.get('SELECT * FROM users WHERE username = ?',[username]);
+    return user9;
     for (let i = 0; i < users.length; i++) {
        if(users[i].username === username)
         {
@@ -237,7 +486,11 @@ function findUserByUsername(username) {
 }
 
 // Function to find a user by user ID
-function findUserById(userId) {   
+async function findUserById(userId) {  
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+     let user9 = db.get('SELECT * FROM users WHERE id = ?',[userId]);
+     return user9;
+
     //Returns user object if found, otherwise return undefined
     for (let i = 0; i < users.length; i++) {
         if(users[i].id == userId)
@@ -247,9 +500,40 @@ function findUserById(userId) {
        }
        return undefined;
 }
-
+async function addUser2(hashedid) {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    console.log("hi5");
+    let hashedid2 = hashedid;
+   /* let currentUser = {};
+    currentUser.id = users.length+1;
+    currentUser.username = username;
+    currentUser.avatar_url = generateAvatar(username[0],100,100);
+*/
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    let hours = String(today.getHours()).padStart(2, '0');
+    let mins = String(today.getMinutes()).padStart(2, '0');
+    let finaldate = yyyy+'-'+mm+'-'+dd+' '+hours+':'+mins;
+   // currentUser.memberSince = finaldate;
+   // users.push(currentUser);
+    
+    console.log("hi6");
+   // let plholder = generateAvatar(username[0],100,100);
+    
+    console.log("hi7");
+    let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince") VALUES (?,?,?,?)';
+    console.log("hi8");
+   // console.log(username2);
+    let p10 = await db.run(qry,[hashedid2,hashedid2,hashedid2,finaldate]);
+    console.log("hi9");
+    //Creates a new user object and add to users array
+}
 // Function to add a new user
-function addUser(username) {
+async function addUser(username) {
+    console.log("hi5");
+    let username2 = username;
     let currentUser = {};
     currentUser.id = users.length+1;
     currentUser.username = username;
@@ -264,7 +548,16 @@ function addUser(username) {
     let finaldate = yyyy+'-'+mm+'-'+dd+' '+hours+':'+mins;
     currentUser.memberSince = finaldate;
     users.push(currentUser);
-
+    
+    console.log("hi6");
+    let plholder = generateAvatar(username[0],100,100);
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    console.log("hi7");
+    let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince") VALUES (?,?,?,?)';
+    console.log("hi8");
+    console.log(username2);
+    let p10 = await db.run(qry,[username2,username2,plholder,finaldate]);
+    console.log("hi9");
     //Creates a new user object and add to users array
 }
 
@@ -279,15 +572,31 @@ function isAuthenticated(req, res, next) { //, next
 }
 
 // Function to register a user
-function registerUser(req, res) {
-    let username = req.body.registeredusername;
-    if(findUserByUsername(username)!=undefined)
+async function registerUser(req, res) {
+    console.log("hi7")
+    let uname = req.body.registeredusername;
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    console.log("hi");
+    id3 = req.session.userId;
+    id4 = res.locals.userId;
+   // let user7 = await db.get('SELECT * FROM users WHERE username = ?',[uname]);
+    let user7 = await db.get('SELECT * FROM users WHERE username = ?',[uname]);   
+    if(user7!=undefined)
     {
-        res.render('loginRegister', { regError: "Please enter an unregistered username" });
+        console.log("hi2");
+        res.render('registerUsername', { regError: "Please enter an unregistered username" });
         return;
     }else{
-        addUser(username);
-        res.render('loginRegister');
+        console.log("hi3");
+       // await addUser(uname);
+       let plholder = generateAvatar(uname[0],100,100);
+       await db.run('UPDATE users SET username = ? WHERE id = ?',[uname,id4]);
+       await db.run('UPDATE users SET avatar_url = ? WHERE id = ?',[plholder,id4]);
+       console.log("done666");
+       let user7 = await db.get('SELECT * FROM users WHERE id = ?',[id4]);
+       
+        console.log("hi5");
+        res.redirect('/');
         return;
     }
     
@@ -295,9 +604,9 @@ function registerUser(req, res) {
 }
 
 // Function to login a user
-function loginUser(req, res) {
-    let username = req.body.usernameloginentered;
-    let user2 = findUserByUsername(username);
+async function loginUser(req, res) {
+    let uname = req.body.usernameloginentered;
+    let user2 = await findUserByUsername(uname);
     
    if( user2 == undefined)
     {
@@ -306,21 +615,17 @@ function loginUser(req, res) {
     }else{
         if(user2.avatar_url==undefined)
             {
-                user2.avatar_url = generateAvatar(username[0],100,100); //generates avatar for user if one doesn't exist
-                for(let i=0;i<users.length;i++)
-                    {
-                        if(users[i].username==username)
-                        {
-                            users[i].avatar_url = user2.avatar_url;
-                        }
-                    }
+                let avatar_url2 = generateAvatar(username[0],100,100); //generates avatar for user if one doesn't exist
+                const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+                console.log("hi");
+                await db.run('UPDATE users SET avatar_url = ? WHERE username = ?',[avatar_url2,uname]);
             }
         res.locals.loggedIn = true;
         req.session.loggedIn  = true;
         req.session.userId = user2.id;
         res.locals.userId = user2.id;
         loggedIn = true;
-        const posts = getPosts();
+        const posts = await getPosts();
         const user = user2;
         res.render('home', { posts, user });
         return;
@@ -335,14 +640,16 @@ function logoutUser(req, res) {
     loggedIn = false;
     res.locals.userId = undefined;
     req.session.userId  = undefined;
-    res.redirect('/');
+   // res.redirect('/');
     //Destroys a session and redirect appropriately
 }
 
 // Function to render the profile page
-function renderProfile(req, res) {
-   const user = findUserById(res.locals.userId);
-   let posts2 = [];
+async function renderProfile(req, res) {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+   const user = await findUserById(res.locals.userId);
+   let posts2 = await db.all('SELECT * FROM posts WHERE username = ?',[user.username]);
+   /*let posts2 = [];
     for(let i = 0;i<posts.length;i++)
         {
             if(posts[i].username == user.username)
@@ -350,13 +657,31 @@ function renderProfile(req, res) {
                     posts2.push(posts[i]);
                 }
         }
+    */
        res.render('profile', { user, posts2});
     //Fetches user posts and render the profile page
 }
 
 // Function to update post likes
-function updatePostLikes(req, res) {
+async function updatePostLikes(req, res) {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     let r = req.body.id;
+    //let user9 = db.all('SELECT * FROM posts WHERE id = ?',[r]);
+    let numlikes = await db.get('SELECT * FROM posts WHERE id = ?',[r]);
+    if(numlikes!=undefined)
+    {
+        console.log(numlikes);
+        console.log("hi");
+        let numlikes2 = numlikes.likes; //is this a number idk
+        console.log(numlikes2);
+        let numlikes3 = numlikes2+1; //will this work\
+        console.log(numlikes3);
+        let user9 = await db.run('UPDATE posts SET likes = ? WHERE id = ?',[numlikes3,r]);
+    }else{
+        console.log("die");
+    }
+
+    /*
     for(let i = 0;i<posts.length;i++)
         {
             if(posts[i].id == r)
@@ -364,26 +689,26 @@ function updatePostLikes(req, res) {
                 posts[i].likes = posts[i].likes + 1;
             }
         }
+        */
     //Increments post likes if conditions are met
 }
 
 // Function to handle avatar generation and serving
-function handleAvatar(req, res) {
-    let user = findUserByUsername(req.params.username);
+async function handleAvatar(req, res) {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    let uname = req.params.username;
+     let user = await db.get('SELECT * FROM users WHERE username = ?',[uname]);
+   // let user = findUserByUsername(req.params.username);
     if(user!=undefined){
-        let letter = user.username[0];
+        let letter = uname[0];
         if(user.avatar_url==undefined)
         {
-            user.avatar_url = generateAvatar(letter, 100,100);
-            for(let i=0;i<users.length;i++)
-            {
-                if(users[i].username==user.username)
-                {
-                    users[i].avatar_url = user.avatar_url;
-                }
-            }
-            res.send(user.avatar_url);
+            let plholder = generateAvatar(letter, 100,100);
+            let user0 = await db.exec('UPDATE users SET avatar_url = ? WHERE username = ?',[plholder,uname]);
+            res.send(plholder);
+//user.avatar_url = generateAvatar(letter, 100,100);
         }else{
+           // res.send(plholder);
             res.send(user.avatar_url);
         }
     }
@@ -396,18 +721,29 @@ function getCurrentUser(req) {
 }
 
 // Function to get all posts, sorted by latest first
-function getPosts() {
-    return posts.slice().reverse();
+async function getPosts() {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+
+    let posts2 = await db.all('SELECT * FROM posts');
+    return posts2.slice().reverse();
+}
+
+async function getPosts2() {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+
+    let posts2 = await db.all('SELECT * FROM posts ORDER BY likes');// DESC
+    return posts2.slice().reverse();//reverse so don't have to add DESC
 }
 
 // Function to add a new post
-function addPost(title, content, user) {
-    let currentPost = {};
+async function addPost(title, content, user) {
+    let user7 = user.username;
+    /*let currentPost = {};
     currentPost.id = currentpostid;
     currentpostid =  currentpostid+1;
     currentPost.title = title;
     currentPost.content = content;
-    currentPost.username = user.username; //or user.username? idk?
+    currentPost.username = user.username; //or user.username? idk?*/
     var today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -415,9 +751,16 @@ function addPost(title, content, user) {
     let hours = String(today.getHours()).padStart(2, '0');
     let mins = String(today.getMinutes()).padStart(2, '0');
     let finaldate = yyyy+'-'+mm+'-'+dd+' '+hours+':'+mins;
-    currentPost.timestamp = finaldate;
-    currentPost.likes = 0;
-    posts.push(currentPost);
+   // currentPost.timestamp = finaldate;
+    //currentPost.likes = 0;
+  //  posts.push(currentPost);
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    let qry = 'INSERT INTO posts ("title", "content","username","timestamp","likes") VALUES (?,?,?,?,?)';
+    console.log("bf");
+    let o11=0;
+    console.log(user7);
+    let o10 = await db.run(qry,[title,content,user7,finaldate,o11]);
+    console.log("af");
     //Creates a new post object and add to posts array
 }
 
