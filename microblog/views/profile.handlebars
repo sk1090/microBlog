@@ -23,6 +23,13 @@
 <section class="user-posts">
     <!-- you can call posts tweets, or truths, or whatever, these are neologisms. Choose your own new in server.js -->
     <h2>Your {{{postNeoType}}}s</h2>
+    <form action="/profilepostsort" method="POST">
+           
+        <input type="radio" id="dates" name="sorttype" value="dates"> 
+        <label for="dates">Sort by Datesss</label>
+        <input type="radio" id="nlikes" name="sorttype" value="nlikes"> 
+        <label for="nlikes">Sort by num likes</label>
+    </form>
     <!-- you'll need to make this conditaionl and #each expression work -->
     {{#if posts2.length}}
         <ul>
@@ -36,4 +43,52 @@
         {{/if}}
 </section>
 
+<script>
+
+     let currentsort = "dates";
+    window.addEventListener('load', init);
+    let radioss = document.getElementsByName('sorttype');
+ for(var i = 0; i < radioss.length; i++){
+     radioss[i].addEventListener("click",changeradio);
+ }
+ 
+ 
+ function changeradio()
+ {
+     let s  = document.querySelector('input[name="sorttype"]:checked').value;
+     if(s!=currentsort) //currentsort
+     {
+         currentsort=s;
+         this.closest("form").submit();
+     }
+     document.getElementById(s).checked=true;
+ }
+ 
+    //fetches emoji api access key from server upon page load
+    function init(){
+         fetch("/getCurrentSortType", {
+             method: "GET",
+         })
+         .then(response => response.text())
+         .then(text => {
+             //alert(text);  
+             document.getElementById(text).checked=true;  
+             currentsort = text;  
+         })
+         .catch(error => console.error('Error:', error));
+     }
+         
+     function handleError(err)
+     {
+         alert("error");
+     }
+     async function statusCheck(res){
+         if(!res.ok)
+         {
+             throw new Error(await res.text());
+         }
+         return res;
+     }
+ 
+ </script>
 
