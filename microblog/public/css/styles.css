@@ -126,14 +126,19 @@ nav a {
   font-weight: bold;
 }
 
+#loginbutton{
+ /* margin: auto;*/
+}
+
 .post{
-  background-color: lightgreenS;
+  background-color: lightgreen;
   width:100%;
   margin: auto;
   display:flex;
   align-items: center;
   vertical-align: center;
   margin-bottom: 20px;
+  color:white;
 }
 
 .post-avatar{
@@ -252,6 +257,8 @@ nav a {
   width:200px;
   padding-left: 50 px;
   margin: 0 auto;
+  padding: auto;
+  text-align: center;
 
 }
 
