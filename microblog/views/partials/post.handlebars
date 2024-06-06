@@ -19,12 +19,15 @@
             <form class="delete2" action="/delete/:{{this.id}}" method="GET">
             <button class="trashes" name="trashes"type="submit" data-id="{{this.id}}" class="delete-button"><i class="fas fa-trash-alt"> </i></button>
             </form>
+            <p id="numLikes{{this.id}}">{{this.likes}} likes.</p>           
+            <p class="postmetadata" class="postmetadata22">Posted by {{this.username}} on {{this.timestamp}}</p>
             {{else}}
             <button  data-id="{{this.id}}" onclick="handleLikeClick()"  class="HeartButton">&#9829</button>
             <button  data-id="{{this.id}}" class="SpikeButton">SPIKE</button>
-            {{/ifCond}}
             <p id="numLikes{{this.id}}">{{this.likes}} likes.</p>           
-            <p class="postmetadata">Posted by {{this.username}} on {{this.timestamp}}</p>
+            <p class="postmetadata22">Posted by {{this.username}} on {{this.timestamp}}</p>
+            {{/ifCond}}
+
         </div>        
     </div>
 </div>
@@ -82,7 +85,7 @@
             spikedstr = text;
           // alert(text);
               let buttons877 = document.querySelectorAll(".SpikeButton");
-        let users877 = document.querySelectorAll(".postmetadata");
+        let users877 = document.querySelectorAll(".postmetadata22");
        //  alert(spikedstr);
          for(let i=0;i<buttons877.length;i++)
          {
@@ -185,8 +188,8 @@
            // alert("hi");
             spikedstr = text;
           // alert(text);
-              let buttons877 = document.querySelectorAll(".SpikeButton");
-        let users877 = document.querySelectorAll(".postmetadata");
+        let buttons877 = document.querySelectorAll(".SpikeButton");
+        let users877 = document.querySelectorAll(".postmetadata22");
        //  alert(spikedstr);
          for(let i=0;i<buttons877.length;i++)
          {
@@ -198,13 +201,14 @@
            // alert(spikedstr);
             if(spikedstr.includes(userstr))
             {
-                //alert("inhere");
+              //  alert("inhere");
                 buttons877[i].textContent="UNSPIKE USER";
-
+                buttons877[i].removeEventListener('click', handleSpike);
                 buttons877[i].addEventListener('click', handleUnspike);
 
             }else{
                 buttons877[i].textContent="SPIKE";
+                buttons877[i].removeEventListener('click', handleUnspike);
                 buttons877[i].addEventListener('click', handleSpike);
                 
             }
@@ -292,7 +296,7 @@ fetch("/getSpikedstr", {
             spikedstr = text;
           // alert(text);
               let buttons877 = document.querySelectorAll(".SpikeButton");
-        let users877 = document.querySelectorAll(".postmetadata");
+        let users877 = document.querySelectorAll(".postmetadata22");
        //  alert(spikedstr);
          for(let i=0;i<buttons877.length;i++)
          {
@@ -306,11 +310,12 @@ fetch("/getSpikedstr", {
             {
                 //alert("inhere");
                 buttons877[i].textContent="UNSPIKE USER";
-
+                buttons877[i].removeEventListener('click', handleSpike);
                 buttons877[i].addEventListener('click', handleUnspike);
 
             }else{
                 buttons877[i].textContent="SPIKE";
+                buttons877[i].removeEventListener('click', handleUnspike);
                 buttons877[i].addEventListener('click', handleSpike);
                 
             }
@@ -321,16 +326,6 @@ fetch("/getSpikedstr", {
             //alert(spikedstr);
         })
         .catch(error => console.error('Error:', error));
-
-
-
-
-
-
-
-
-
-
              }
          })
          .catch(error => console.error('Error:', error));
