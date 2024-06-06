@@ -16,9 +16,12 @@
          <hr>
         <div class="post-status-bar">
             {{#ifCond this.username user.username}}
-            <button data-id="{{this.id}}" class="delete-button"><i class="fas fa-trash-alt"> </i></button>
+            <form class="delete2" action="/delete/:{{this.id}}" method="GET">
+            <button class="trashes" name="trashes"type="submit" data-id="{{this.id}}" class="delete-button"><i class="fas fa-trash-alt"> </i></button>
+            </form>
             {{else}}
             <button  data-id="{{this.id}}" onclick="handleLikeClick()"  class="HeartButton">&#9829</button>
+            <button  data-id="{{this.id}}" class="SpikeButton">SPIKE</button>
             {{/ifCond}}
             <p id="numLikes{{this.id}}">{{this.likes}} likes.</p>           
             <p class="postmetadata">Posted by {{this.username}} on {{this.timestamp}}</p>
@@ -26,7 +29,11 @@
     </div>
 </div>
 <script>
+    //let spikedstr="";
     window.addEventListener("load", init);
+    let spikedstr="";
+        
+     
     function init() {
         let imgs = document.querySelectorAll(".avatar-post-img");
         //renders user's avatars by doing a fetch call to get their urls and displaying them in their posts
@@ -52,13 +59,61 @@
         {
             trashes[i].addEventListener('click', handleLikeClick);
         }
-
+        /*
         //adds event listeners for all the delete buttons
         let trashes2 = document.querySelectorAll('.delete-button');
         for(let i = 0;i<trashes2.length;i++)
         {
             trashes2[i].addEventListener('click', handleDeleteClick);
         }
+        */
+        let trashes3 = document.querySelectorAll(".SpikeButton");
+        for(let i = 0;i<trashes.length;i++)
+        {
+           // trashes3[i].addEventListener('click', handleSpike);
+        }
+        
+           fetch("/getSpikedstr", {
+            method: "GET",
+        })
+        .then(response => response.text())
+        .then(text => {
+           // alert("hi");
+            spikedstr = text;
+          // alert(text);
+              let buttons877 = document.querySelectorAll(".SpikeButton");
+        let users877 = document.querySelectorAll(".postmetadata");
+       //  alert(spikedstr);
+         for(let i=0;i<buttons877.length;i++)
+         {
+           // alert("hi2");
+            let inter = users877[i].textContent.split(" ");
+            let userstr = inter[2];
+
+           // alert(userstr);
+           // alert(spikedstr);
+            if(spikedstr.includes(userstr))
+            {
+                //alert("inhere");
+                buttons877[i].textContent="UNSPIKE USER";
+
+                buttons877[i].addEventListener('click', handleUnspike);
+
+            }else{
+                buttons877[i].textContent="SPIKE";
+                buttons877[i].addEventListener('click', handleSpike);
+                
+            }
+         }
+           // alert(text);  
+            
+
+            //alert(spikedstr);
+        })
+        .catch(error => console.error('Error:', error));
+       // alert(spikedstr);
+        //alert("hi1");
+      
     }
 
 
@@ -85,20 +140,95 @@
             .then(text => {
                 if(text.includes("loggedin"))
                 {
+                    let str877 = n2.textContent;
+                    let split87 = str877.split(" ");
+                    let numlikes87 = Number(split87[0])+1;
+                   // alert("hi");
+                   // alert(numlikes87);
                         buttonElement.style.color = "red";
-                    n2.textContent = ""+(Number(n2.textContent[0])+1)+" likes.";
+                      //  alert(n2.textContent);
+                    n2.textContent = ""+numlikes87+" likes.";
                 }
                 
             })
             .catch(error => console.error('Error:', error));
          }
     }
-    
+    function handleSpike(event) {
+        
+       
+       let buttonElement = event.target.closest('.SpikeButton');
+    if(buttonElement.textContent=="SPIKE")
+    {
+         
+               let paramstr = "id="+buttonElement.getAttribute('data-id');
+       let t = buttonElement.getAttribute('data-id');
+        if(t!=undefined)
+        {
+            const urlstr = "/spike/:"+t;
+            fetch(urlstr, {
+                method: "POST",
+                headers: new Headers({
+                    'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
+                    }),
+                    body: paramstr
+            })
+            .then(response => response.text())
+            .then(text => {
+                if (text.includes("spiked")) {
+                    //buttonElement.textContent="HAVE SPIKED USER";
+                    fetch("/getSpikedstr", {
+            method: "GET",
+        })
+        .then(response => response.text())
+        .then(text => {
+           // alert("hi");
+            spikedstr = text;
+          // alert(text);
+              let buttons877 = document.querySelectorAll(".SpikeButton");
+        let users877 = document.querySelectorAll(".postmetadata");
+       //  alert(spikedstr);
+         for(let i=0;i<buttons877.length;i++)
+         {
+           // alert("hi2");
+            let inter = users877[i].textContent.split(" ");
+            let userstr = inter[2];
+
+           // alert(userstr);
+           // alert(spikedstr);
+            if(spikedstr.includes(userstr))
+            {
+                //alert("inhere");
+                buttons877[i].textContent="UNSPIKE USER";
+
+                buttons877[i].addEventListener('click', handleUnspike);
+
+            }else{
+                buttons877[i].textContent="SPIKE";
+                buttons877[i].addEventListener('click', handleSpike);
+                
+            }
+         }
+           // alert(text);  
+            
+
+            //alert(spikedstr);
+        })
+        .catch(error => console.error('Error:', error));
+                   // window.location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        } 
+    }
+      
+    }    
 
      //extracts the post id using js, does a fetch call to delete the post
         //from the list of posts in the server and reload so it won't be rendered
     function handleDeleteClick(event) {
        let buttonElement = event.target.closest('.delete-button');
+       let formel = event.target.closest('.delete2');
        let paramstr = "id="+buttonElement.getAttribute('data-id');
        let t = buttonElement.getAttribute('data-id');
         if(t!=undefined)
@@ -114,10 +244,97 @@
             .then(response => response.text())
             .then(text => {
                 if (text.includes("Reload Page")) {
-                    window.location.reload();
+                    formel.submit();
+                 //   alert("mistake");
+                 //window.
+                //   location.reload();
                 }
             })
             .catch(error => console.error('Error:', error));
         }       
-    }    
+    }  
+
+    function handleUnspike(event)
+ {
+   //alert("hi");
+    let buttonElement = event.target.closest('.SpikeButton');
+    if(buttonElement.textContent=="UNSPIKE USER")
+    {
+       // alert("inuspike");
+    let paramstr = "id="+buttonElement.getAttribute('data-id');
+    let t = buttonElement.getAttribute('data-id');
+     if(t!=undefined)
+     {
+         const urlstr = "/unspike/:"+t;
+         fetch(urlstr, {
+             method: "POST",
+             headers: new Headers({
+                 'Content-Type': 'application/x-www-form-urlencoded', // <-- Specifying the Content-Type
+                 }),
+                 body: paramstr
+         })
+         .then(response => response.text())
+         .then(text => {
+             if (text.includes("unspiked")) {
+        fetch("/spikedusers", {
+            method: "GET",
+        })
+        .catch(error => console.error('Error:', error));
+       // window.location.reload();
+              //   window.location.reload();
+
+fetch("/getSpikedstr", {
+            method: "GET",
+        })
+        .then(response => response.text())
+        .then(text => {
+           // alert("hi");
+            spikedstr = text;
+          // alert(text);
+              let buttons877 = document.querySelectorAll(".SpikeButton");
+        let users877 = document.querySelectorAll(".postmetadata");
+       //  alert(spikedstr);
+         for(let i=0;i<buttons877.length;i++)
+         {
+           // alert("hi2");
+            let inter = users877[i].textContent.split(" ");
+            let userstr = inter[2];
+
+           // alert(userstr);
+           // alert(spikedstr);
+            if(spikedstr.includes(userstr))
+            {
+                //alert("inhere");
+                buttons877[i].textContent="UNSPIKE USER";
+
+                buttons877[i].addEventListener('click', handleUnspike);
+
+            }else{
+                buttons877[i].textContent="SPIKE";
+                buttons877[i].addEventListener('click', handleSpike);
+                
+            }
+         }
+           // alert(text);  
+            
+
+            //alert(spikedstr);
+        })
+        .catch(error => console.error('Error:', error));
+
+
+
+
+
+
+
+
+
+
+             }
+         })
+         .catch(error => console.error('Error:', error));
+     }
+    }
+ }
 </script>
