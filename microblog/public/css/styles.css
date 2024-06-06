@@ -280,15 +280,34 @@ nav a {
 
 }
 
+.register-area2{
+  
+  margin-right: 15%;
+  background-color: gray;
+  height:280px;
+  margin-top:5%;
+  background-color: ghostwhite;
+  width:200px;
+ 
+  margin: 0 auto;
+}
+
 @media screen and (min-width: 600px){
   .login-area,.register-area{
     flex-basis:20%;
+
   }
   .or-element{
     flex-basis:33%;
   }
   .login-register{
     height:80%;
+    display:flex;
+    vertical-align: center;
+    align-items:center;
+  }
+  .login-register2{
+    height:20%;
     display:flex;
     vertical-align: center;
     align-items:center;
@@ -370,4 +389,8 @@ nav a {
 
 .HeartButton{
   font-size:25px;
+}
+
+.trashes{
+  font-size:30px;
 }
