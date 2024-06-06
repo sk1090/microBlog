@@ -34,10 +34,14 @@
     <section class="posts-list">
         <!-- recent posts -->
         
-        {{#if posts.length}}
+        
         
         <ul>
             <h2 id="newPost">Recent Posts</h2>
+            <form id="searchform" action="/postsearch" method="POST">
+            <input  name="postsearch" id="postsearch" size="40" type="text" class="PostSearchBar" placeholder="Search Posts"></input>
+            <button type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>
+            </form>
             <form action="/postsort" method="POST">
             
                 <input type="radio" id="dates" name="sorttype" value="dates"> 
@@ -46,14 +50,22 @@
                 <label for="nlikes">Sort by Number of Likes</label>
             
             </form>
+        {{#if posts.length}} 
             {{#each posts}}
 
                 <!-- you have to pass the user in to posts and this is the syntax -->
                 {{> post this user=../user}} 
 
             {{/each}}
+          
         </ul>
         {{else}}
+            <section class="login-register">
+            <section class = "register-area" id="logout-area">
+            <h2 id="noposts">NO POSTS FOUND</h2>
+            </section>
+            </section>
+            </ul>
             <!-- no posts, oh no, what now? -->
         {{/if}}
     </section>
@@ -70,8 +82,19 @@
 for(var i = 0; i < radioss.length; i++){
     radioss[i].addEventListener("click",changeradio);
 }
+/*
+ let trashes2 = document.querySelectorAll('.delete-button');
+        for(let i = 0;i<trashes2.length;i++)
+        {
+            trashes2[i].addEventListener('click', handleDeleteClick2);
+        }
 
-
+function handleDeleteClick2(event)
+{
+    alert("bye");
+    window.location.reload();
+}
+*/
 function changeradio()
 {
     let s  = document.querySelector('input[name="sorttype"]:checked').value;
@@ -104,6 +127,18 @@ function changeradio()
             accessToken2 = text;             
         })
         .catch(error => console.error('Error:', error));
+        
+        fetch("/getSearchTerm", {
+            method: "GET",
+        })
+        .then(response => response.text())
+        .then(text => {
+            //alert(text);
+            document.getElementById("postsearch").value = text;    
+        })
+        .catch(error => console.error('Error:', error));
+        
+        //alert("done");
     }
    
     let allEmojis = [];
@@ -130,6 +165,10 @@ function changeradio()
         displayEmojis(filteredEmojis, 200);
     }
 
+    function searchPosts() {
+        document.getElementById("searchform").submit();
+        //do a post request and send in the searchterm
+    }
     //inserts emoji into textarea
     function insertEmoji(emoji) {    
         document.getElementById('PostBody').value+=emoji;
@@ -173,7 +212,7 @@ function changeradio()
         
     function handleError(err)
     {
-        //alert("error");
+      //  alert(err);
     }
 
     //displays 200 of the fetched emojis
@@ -183,6 +222,10 @@ function changeradio()
         let s = ""+responseData.length;
         let t = responseData[0].slug;
         displayEmojis(responseData, 200);
+    }
+    function processData2()
+    {
+       alert("hi2");
     }
     async function statusCheck(res){
         if(!res.ok)
