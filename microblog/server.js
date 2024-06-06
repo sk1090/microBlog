@@ -854,12 +854,12 @@ function logoutUser(req, res) {
 app.get('/deleteaccount', isAuthenticated, async function(req, res){
     app.use(isAuthenticated);
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-   console.log("lotr");
+   //console.log("lotr");
      let user87 = await findUserById(res.locals.userId);
-     console.log("lotr4");
+    // console.log("lotr4");
     let userstr = user87.username;
-    console.log("lotr2");
-    console.log(userstr);
+    //console.log("lotr2");
+    //console.log(userstr);
     
     await db.run('DELETE FROM posts WHERE username = ?',[userstr]);
     await db.run('DELETE FROM users WHERE username = ?',[userstr]);
