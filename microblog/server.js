@@ -43,11 +43,12 @@ const REDIRECT_URI = 'http://localhost:3000/auth/google/callback';
 const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 const PORT = 3000;
 let currentpostid = 3;
-
-
+let searchingposts = 0;
+let searchstr='';
+let searchterm2 = '';
 
 let sortbydate=1;
-
+let deletemsg = 0;
 
 /*
 try {
@@ -103,8 +104,13 @@ app.engine(
                 }
                 return options.inverse(this);
             },
+            setVar: function(varName, varValue, options) {
+                return options.data.root[varName] = varValue;
+            },
         },
     })
+  
+    
 );
 
 app.set('view engine', 'handlebars');
@@ -181,8 +187,8 @@ app.get('/', async function(req, res){
             await db.run('UPDATE users SET avatar_url = ? WHERE id = ?',[plholder5,id999]);
         }
     }
-
-    let posts =  await getPosts();
+if(searchingposts==0){
+    let posts =  {};
     if(sortbydate==1)
         {
             //console.log("ch2");
@@ -198,6 +204,46 @@ app.get('/', async function(req, res){
              res.render('home', { posts, user });
              
         }
+    }else{
+        const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+        searchingposts = 0;
+        /*
+        if(sortbydate==1)
+            {
+
+            }else{
+
+            }
+            */
+        if(sortbydate==1)
+        {
+            let posts = await db.all('SELECT * FROM posts WHERE content LIKE ? OR title LIKE ? OR username LIKE ?',[searchstr,searchstr,searchstr]); //or title CONTAINS 
+   //let posts = await getPosts2();
+            posts = posts.slice().reverse();
+
+    if(posts.length>0)
+    {
+        res.render('home', { posts, user });
+    }else{
+        posts = {};
+        res.render('home', {posts, user });
+    }
+   
+        }else{
+            let posts = await db.all('SELECT * FROM posts WHERE content LIKE ? OR title LIKE ? OR username LIKE ? ORDER BY likes',[searchstr,searchstr,searchstr]); //or title CONTAINS 
+            posts = posts.slice().reverse();
+            //let posts = await getPosts2();
+       console.log("BREAK")
+
+    res.render('home', { posts, user });
+        }
+        
+    //req.body.postsearch = searchstr;
+    //console.log(searchstr);
+
+    //res.send(searchstr);
+   
+    }
         
     //res.render('home', { posts, user });
 });
@@ -220,6 +266,43 @@ app.get('/error', (req, res) => {
 });
 
 
+app.post('/postsearch', async function (req, res){
+    console.log("here");
+    //alert("hi3")
+    let searchTerm = req.body.postsearch;
+    console.log(searchTerm);
+    searchterm2 = searchTerm;
+    let str = '%'+searchTerm+'%';
+    searchstr = str;
+       
+    //res.render('home', { posts, user });
+    console.log("hi");
+    searchingposts = 1;
+    await res.redirect('/');
+    console.log("hi5");
+    req.body.postsearch = searchTerm;
+    console.log("hi5");
+
+});
+
+app.post('/spikedpostsearch', async function (req, res){
+    console.log("here");
+    //alert("hi3")
+    let searchTerm = req.body.postsearch;
+    console.log(searchTerm);
+    searchterm2 = searchTerm;
+    let str = '%'+searchTerm+'%';
+    searchstr = str;
+       
+    //res.render('home', { posts, user });
+    console.log("hi");
+    searchingposts = 1;
+    await res.redirect('/spikedusers');
+    console.log("hi5");
+    req.body.postsearch = searchTerm;
+    console.log("hi5");
+
+});
 // Additional routes that you must implement
 app.post('/postsort', async function (req, res){
     if(sortbydate==0)
@@ -249,6 +332,21 @@ app.post('/profilepostsort', async function (req, res){
     req.body.sorttype = "nlikes"; //?
 });
 
+app.post('/spikedpostsort', async function (req, res){
+    console.log("insps");
+    if(sortbydate==0)
+    {
+        sortbydate=1;
+    }else{
+        sortbydate=0;
+    }
+    
+    await res.redirect('/spikedusers');
+   // console.log("DIENOW");
+    //console.log(req.body.sorttype);
+    req.body.sorttype = "nlikes"; //?
+});
+
 //Adds a new post and redirect to home
 app.post('/posts', async function(req, res){
     // TODO: 
@@ -263,6 +361,11 @@ app.post('/posts', async function(req, res){
             sortbydate=0;
         }
         */
+    res.redirect('/');
+});
+
+app.post('/delete2', async function(req, res){
+    // TODO: 
     res.redirect('/');
 });
 
@@ -286,6 +389,28 @@ app.get('/profile', isAuthenticated, async function(req, res){
 //sends emoji access key to user if they send a fetch request for it
 app.get('/getEmojiAccessKey', (req, res) => {
     res.send(accessToken);
+});
+app.get('/getSpikedstr', async function(req, res){
+
+    let user87 = await findUserById(req.session.userId);
+    let spikestr="";
+    if(user87!=undefined)
+        {
+
+            spikestr = user87.spikedUsers;
+        }
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    let aaa= await db.all('SELECT spikedUsers FROM users WHERE id = ?',[req.session.userId]);
+    //const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    //let user877 = await db.get('SELECT * FROM users WHERE hashedGoogleId = ?',[hashedid]);
+
+    res.send(spikestr);
+});
+
+app.get('/getSearchTerm', (req, res) => {
+
+    res.send(searchterm2);
+    searchterm2="";
 });
 
 app.get('/getCurrentSortType', (req, res) => {
@@ -350,7 +475,14 @@ app.get('/googleLogout', (req, res) => {
 });
 
 app.get('/logoutCallback', (req, res) => {
-    res.render('googleLogout', {});
+    if(deletemsg==1)
+    {
+        deletemsg=0;
+        res.render('deleteAccount', {});
+    }else{
+        res.render('googleLogout', {});
+    }
+    
 });
 
 app.get('/auth/google', (req, res) => {
@@ -448,23 +580,31 @@ if(user==undefined)
 
 });
 
-
-
-
-
-
-
-
-
-
-//Deletes a post if the current user is the owner
-app.post('/delete/:id', isAuthenticated, async function(req, res){
+async function spikePosts(req, res) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
-    app.use(isAuthenticated);
-    //console.log("pi7");
     let id7 = req.body.id;
-    //console.log("pi8");
-    await db.run('DELETE FROM posts WHERE id = ?',[id7]);
+    
+    let p1 = await db.get('SELECT * FROM posts WHERE id = ?',[id7]);
+    
+    let user2 = p1.username;
+
+
+    let user777 =  await findUserById(req.session.userId);
+    let currentuser = user777.username;
+    let currentid = user777.id;
+    let user3 = await db.get('SELECT * FROM users WHERE username = ?',[currentuser]);
+
+    let currentspikedusers = user3.spikedUsers;
+    if(!currentspikedusers.includes(user2))
+    {
+        currentspikedusers = currentspikedusers+':::~***'+user2;
+        await db.run('UPDATE users SET spikedUsers = ? WHERE id = ?',[currentspikedusers,currentid]);
+    }
+
+
+    
+
+
 /*
     for(let i = 0;i<posts.length;i++)
         {
@@ -474,8 +614,66 @@ app.post('/delete/:id', isAuthenticated, async function(req, res){
                 }
         }
         */
-        res.send("Reload Page");
+    }
+
+
+
+
+app.post('/spike/:id', async function(req, res){
+    if(res.locals.loggedIn || req.session.loggedIn)
+        {
+            await spikePosts(req,res);
+        res.send("spiked");
+       // console.log("hi13");
+    }
 });
+
+app.post('/unspike/:id', async function(req, res){
+    if(res.locals.loggedIn || req.session.loggedIn)
+        {
+            await unspikePosts(req,res);
+        res.send("unspiked");
+    }
+});
+
+async function unspikePosts(req, res) {
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    let id7 = req.body.id;
+    let p1 = await db.get('SELECT * FROM posts WHERE id = ?',[id7]);
+    
+    let user2 = p1.username;
+    let user777 =  await findUserById(req.session.userId);
+    let currentuser = user777.username;
+    let currentid = user777.id;
+    let user3 = await db.get('SELECT * FROM users WHERE username = ?',[currentuser]);
+
+    let currentspikedusers = user3.spikedUsers;
+    let rplc = ':::~***'+user2;
+    let str8729 = currentspikedusers.split(rplc).join('');
+
+    let newstr = currentspikedusers.replace(rplc,'');
+    re = new RegExp(user2, "g");
+    let newstr2 = newstr.replace(re, "");
+    //let newstr2 = newstr.replace(user2,'');
+    await db.run('UPDATE users SET spikedUsers = ? WHERE id = ?',[str8729,currentid]);
+    //await res.redirect('/spikedusers');
+  }
+
+  app.get('/delete/:id', isAuthenticated, async function(req, res){
+
+    app.use(isAuthenticated);
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+   
+    //console.log("pi7");
+    let id7 = req.params.id;
+    let id8 = id7.split(":");
+    let id9 = id8[1];
+    //console.log("pi8");
+    await db.run('DELETE FROM posts WHERE id = ?',[id9]);
+        res.redirect('/');
+});
+
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Server Activation
@@ -529,10 +727,11 @@ async function addUser2(hashedid) {
    // let plholder = generateAvatar(username[0],100,100);
     
     //console.log("hi7");
-    let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince") VALUES (?,?,?,?)';
+    let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince","spikedUsers") VALUES (?,?,?,?,?)';
    // console.log("hi8");
    // console.log(username2);
-    let p10 = await db.run(qry,[hashedid2,hashedid2,hashedid2,finaldate]);
+   let emptystr = '';
+    let p10 = await db.run(qry,[hashedid2,hashedid2,hashedid2,finaldate,emptystr]);
    // console.log("hi9");
     //Creates a new user object and add to users array
 }
@@ -559,10 +758,11 @@ async function addUser(username) {
     let plholder = generateAvatar(username[0],100,100);
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
     //console.log("hi7");
-    let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince") VALUES (?,?,?,?)';
+    let qry = 'INSERT INTO users ("username","hashedGoogleId","avatar_url", "memberSince","spikedUsers") VALUES (?,?,?,?,?)';
    // console.log("hi8");
     //console.log(username2);
-    let p10 = await db.run(qry,[username2,username2,plholder,finaldate]);
+    let emptystr = "";
+    let p10 = await db.run(qry,[username2,username2,plholder,finaldate,emptystr]);
     //console.log("hi9");
     //Creates a new user object and add to users array
 }
@@ -650,6 +850,99 @@ function logoutUser(req, res) {
     //Destroys a session and redirect appropriately
 }
 
+
+app.get('/deleteaccount', isAuthenticated, async function(req, res){
+    app.use(isAuthenticated);
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+   console.log("lotr");
+     let user87 = await findUserById(res.locals.userId);
+     console.log("lotr4");
+    let userstr = user87.username;
+    console.log("lotr2");
+    console.log(userstr);
+    
+    await db.run('DELETE FROM posts WHERE username = ?',[userstr]);
+    await db.run('DELETE FROM users WHERE username = ?',[userstr]);
+    let posts87 = await getPosts();
+   // console.log(posts87);
+    res.redirect('/logout');
+    deletemsg = 1;
+});
+
+app.get('/spikedusers', isAuthenticated, async function(req, res){
+    app.use(isAuthenticated);
+    const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
+    const user = await findUserById(res.locals.userId);
+
+    let spikedUsersStr = user.spikedUsers.split(':::~***');
+    let posts3=[];
+    let posts2 = [];
+    for(let i = 0; i<spikedUsersStr.length;i++)
+    {
+        if(spikedUsersStr[i]!='')
+        {
+            if(searchingposts==0)
+            {
+                if(sortbydate==1)
+                    {
+                        posts2 = await db.all('SELECT * FROM posts WHERE username = ?',[spikedUsersStr[i]]);
+                        posts2 = posts2.slice().reverse();
+                    }else{
+                        posts2 = await db.all('SELECT * FROM posts WHERE username = ? ORDER BY likes',[spikedUsersStr[i]]);
+                        posts2 = posts2.slice().reverse();
+                    }
+            }else{
+
+                searchingposts=0;
+                if(sortbydate==1)
+                    {
+                posts2 = await db.all('SELECT * FROM posts WHERE content LIKE ? OR title LIKE ? OR username LIKE ? AND username = ?',[searchstr,searchstr,searchstr,spikedUsersStr[i]]); //or title CONTAINS 
+                console.log("POST2");
+                //console.log(posts2);
+                //let posts = await getPosts2();
+                posts2 = posts2.slice().reverse();
+                    }else{
+                        posts2 = await db.all('SELECT * FROM posts WHERE content LIKE ? OR title LIKE ? OR username LIKE ? AND username = ? ORDER BY likes',[searchstr,searchstr,searchstr,spikedUsersStr[i]]); //or title CONTAINS 
+                //let posts = await getPosts2();
+                posts2 = posts2.slice().reverse();
+                    }
+            }
+            
+
+            
+            let lastindex = posts3.length-1;
+            for(let j = 0; j<posts2.length;j++)
+            {
+                let flag87=0;
+                for(let k = 0; k<posts3.length;k++)
+                {
+                    if(k<=lastindex&&posts3[k].username==posts2[j].username)
+                    {
+                        flag87 =1;
+                        //break?
+                    }
+                }
+                if(flag87==0)//!posts3.includes(posts2[j])
+                {
+                    posts3.push(posts2[j]);
+                }
+            }
+            
+           //if(!posts3.includes(posts2))
+           // {
+              //  posts3.push(posts2);
+           // }
+            
+            //posts3=posts3.concat(posts2);
+        }
+        
+    }
+
+    res.render('spikedusers', { user, posts3});
+
+    
+});
+
 // Function to render the profile page
 async function renderProfile(req, res) {
     const db = await sqlite.open({ filename: dbFileName, driver: sqlite3.Database });
@@ -730,8 +1023,9 @@ async function handleAvatar(req, res) {
 }
 
 // Function to get the current user from session
-function getCurrentUser(req) {
-    return findUserById(req.session.userId);
+async function getCurrentUser(req) {
+    let user77 = await findUserById(req.session.userId);
+    return user77;
 }
 
 // Function to get all posts, sorted by latest first
