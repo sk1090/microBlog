@@ -15,7 +15,8 @@ async function initializeDB() {
             username TEXT NOT NULL UNIQUE,
             hashedGoogleId TEXT NOT NULL UNIQUE,
             avatar_url TEXT,
-            memberSince DATETIME NOT NULL
+            memberSince DATETIME NOT NULL,
+            spikedUsers TEXT
         );
 
         CREATE TABLE IF NOT EXISTS posts (
@@ -26,12 +27,14 @@ async function initializeDB() {
             timestamp DATETIME NOT NULL,
             likes INTEGER NOT NULL
         );
+
+       
     `);
 
     // Sample data - Replace these arrays with your own data
     const users = [
-        { username: 'user1', hashedGoogleId: 'hashedGoogleId1', avatar_url: '', memberSince: '2024-01-01 12:00:00' },
-        { username: 'user2', hashedGoogleId: 'hashedGoogleId2', avatar_url: '', memberSince: '2024-01-02 12:00:00' }
+        { username: 'user1', hashedGoogleId: 'hashedGoogleId1', avatar_url: '', memberSince: '2024-01-01 12:00:00',spikedUsers: ''},
+        { username: 'user2', hashedGoogleId: 'hashedGoogleId2', avatar_url: '', memberSince: '2024-01-02 12:00:00', spikedUsers: ''}
     ];
 
     const posts = [
